@@ -1,6 +1,6 @@
 package File::CRBackup;
 BEGIN {
-  $File::CRBackup::VERSION = '0.01';
+  $File::CRBackup::VERSION = '0.02';
 }
 # ABSTRACT: Cp+rsync-based filesystem backup with history levels and hardlinks
 
@@ -53,7 +53,13 @@ sub backup {
         unless lock("$target/.lock", undef, "nonblocking");
 
     if ($backup) {
-        _backup(\@sources, $target, $extra_dir);
+        _backup(
+            \@sources, $target,
+            {
+                extra_dir        => $extra_dir,
+                extra_cp_opts    => $args{extra_cp_opts},
+                extra_rsync_opts => $args{extra_rsync_opts},
+            });
     }
 
     if ($rotate) {
@@ -64,13 +70,15 @@ sub backup {
 }
 
 sub _backup {
-    my ($sources, $target, $extra_dir) = @_;
+    my ($sources, $target, $opts) = @_;
     $log->infof("Starting backup %s ==> %s ...", $sources, $target);
     my $cmd;
     if (-e "$target/current" && !(-e "$target/.tmp")) {
         $cmd = join(
             "",
             "nice -n19 cp -al ",
+            ($opts->{extra_cp_opts} ? map { shell_quote($_), " " }
+                 @{$opts->{extra_cp_opts}} : ()),
             shell_quote("$target/current"),
             " ", shell_quote("$target/.tmp")
         );
@@ -82,7 +90,10 @@ sub _backup {
     $cmd = join(
         "",
         "nice -n19 rsync -a --del --force ",
-        map({ shell_quote($_), ($extra_dir || !(-d $_) ? "" : "/"), " " }
+        ($opts->{extra_rsync_opts} ? map { shell_quote($_), " " }
+             @{$opts->{extra_rsync_opts}} : ()),
+        map({ shell_quote($_),
+              ($opts->{extra_dir} || !(-d $_) ? "" : "/"), " " }
                 @$sources),
         shell_quote("$target/.tmp/"),
     );
@@ -197,7 +208,7 @@ File::CRBackup - Cp+rsync-based filesystem backup with history levels and hardli
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 SYNOPSIS
 
@@ -309,7 +320,8 @@ backup process will just continue the rsync process.
 
 =head2 Maintenance of histories/history levels
 
-TARGET/hist.* are level-1 backups. Each backup run will produce a new history:
+TARGET/hist.* are level-1 backup histories. Each backup run will produce a new
+history:
 
  TARGET/hist.<timestamp1>
  TARGET/hist.<timestamp2> # produced by the next backup
@@ -369,12 +381,13 @@ number of histories).
 
 =item * extra_dir => BOOL
 
-If set to true, then backup(source => '/a', target => '/backup/a') will create
+If set to 1, then backup(source => '/a', target => '/backup/a') will create
 another 'a' directory, i.e. /backup/a/current/a. Otherwise, contents of a/ will
 be directly copied under /backup/a/current/.
 
-Will always be set to true if source is more than one, but default to false if
-source is a single directory.
+Will always be set to 1 if source is more than one, but default to 0 if source
+is a single directory. You can set this to 1 to so that behaviour when there is
+a single source is the same as behaviour when there are several sources.
 
 =item * backup => BOOL (default 1)
 
@@ -386,6 +399,17 @@ backup without rotating histories.
 Whether to rotate histories or not (which is done after backup). If backup=0 and
 rotate=1 then will only do history rotating.
 
+=item * extra_cp_opts => ARRAYREF (default none)
+
+Extra options to pass to B<cp> command when doing backup. Note that the options
+will be shell quoted.
+
+=item * extra_rsync_opts => ARRAYREF (default none)
+
+Extra options to pass to B<rsync> command when doing backup. Note that the
+options will be shell quoted, so you should pass it unquoted, e.g. ['--exclude',
+'/Program Files'].
+
 =back
 
 =head1 HISTORY
@@ -396,13 +420,11 @@ cherry-picking. At first we used B<rdiff-backup>, but turned out it was not very
 robust as the script chose to exit on many kinds of non-fatal errors instead of
 ignoring the errors and continuning backup. It was also very slow: on a server
 with hundreds of accounts with millions of files, backup process often took 12
-hours or more. After evaluating several other solutions, we found out that
-nothing beats the raw performance of rsync/cp. And thus we design a simple
-backup system based on them.
+hours or more. After evaluating several other solutions, we realized that
+nothing beats the raw performance of rsync/cp. Thus we designed a simple backup
+system based on them.
 
 =head1 TODO
-
-* Allow extra cp & rsync options
 
 * Allow ionice etc instead of just nice -n19
 
@@ -429,4 +451,3 @@ the same terms as the Perl 5 programming language system itself.
 __END__
 
 
-1;
