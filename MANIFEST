@@ -5,7 +5,9 @@ MANIFEST
 MANIFEST.SKIP
 META.yml
 README
+bin/crbackup
 dist.ini
+lib/App/CRBackup.pm
 lib/File/CRBackup.pm
 t/00-compile.t
 t/01-basics.t

@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+
+# workaround for dzil
+package crbackup;
+BEGIN {
+  $crbackup::VERSION = '0.03';
+}
+
+use 5.010;
+use strict;
+use warnings;
+use Log::Any::App;
+
+use Sub::Spec::CmdLine qw(run);
+use File::CRBackup;
+
+run(module => 'File::CRBackup', sub => 'backup');
+
+
+
+=pod
+
+=head1 NAME
+
+crbackup
+
+=head1 VERSION
+
+version 0.03
+
+=head1 DESCRIPTION
+
+See L<File::CRBackup> for more documentation.
+
+=head1 NAME
+
+crbackup - Backup files/directories with histories, using cp+rsync
+
+=head1 SEE ALSO
+
+L<File::CRBackup>
+
+=head1 AUTHOR
+
+Steven Haryanto <stevenharyanto@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2011 by Steven Haryanto.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+
+
+__END__
+

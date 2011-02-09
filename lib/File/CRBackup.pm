@@ -1,16 +1,13 @@
 package File::CRBackup;
 BEGIN {
-  $File::CRBackup::VERSION = '0.02';
+  $File::CRBackup::VERSION = '0.03';
 }
-# ABSTRACT: Cp+rsync-based filesystem backup with history levels and hardlinks
+# ABSTRACT: Backup files/directories with histories, using cp+rsync
 
 use 5.010;
 use strict;
 use warnings;
 use Log::Any '$log';
-require Exporter;
-our @ISA       = qw(Exporter);
-our @EXPORT_OK = qw(backup);
 
 use File::chdir;
 use File::Flock;
@@ -19,7 +16,109 @@ use File::Which qw(which);
 use POSIX;
 use String::ShellQuote;
 #use Taint::Util;
+use Time::Local;
 
+require Exporter;
+our @ISA       = qw(Exporter);
+our @EXPORT_OK = qw(backup);
+
+our %SUBS;
+
+$SUBS{backup} = {
+    summary       =>
+        'Backup files/directories with histories, using cp+rsync',
+    required_args => [qw/source target/],
+    args          => {
+        source           => ['any*'   => {
+            of           => ['str*', ['array*' => {of=>'str*'}]],
+            summary      => 'Director(y|ies) to backup',
+            arg_order    => 0,
+        }],
+        target           => ['str*'   => {
+            summary      => 'Backup destination',
+            arg_order    => 1,
+        }],
+        histories        => ['array*' => {
+            of           => 'int*',
+            default      => [-7, 4, 3],
+            summary      => 'Histories/history levels',
+            description  => <<'_',
+
+Specifies number of backup histories to keep for level 1, 2, and so on. If
+number is negative, specifies number of days to keep instead (regardless of
+number of histories).
+
+_
+        }],
+        extra_dir        => ['bool'   => {
+            summary      =>
+                'Whether to force creation of source directory in target',
+            description  => <<'_',
+
+If set to 1, then backup(source => '/a', target => '/backup/a') will create
+another 'a' directory in target, i.e. /backup/a/current/a. Otherwise, contents
+of a/ will be directly copied under /backup/a/current/.
+
+Will always be set to 1 if source is more than one, but default to 0 if source
+is a single directory. You can set this to 1 to so that behaviour when there is
+a single source is the same as behaviour when there are several sources.
+
+_
+        }],
+        backup           => [bool     => {
+            default      => 1,
+            summary      => 'Whether to do backup or not',
+            description  => <<'_',
+
+If backup=1 and rotate=0 then will only create new backup without rotating
+histories.
+
+_
+        }],
+        rotate           => [bool     => {
+            default      => 1,
+            summary      => 'Whether to do rotate after backup or not',
+            description  => <<'_',
+
+If backup=0 and rotate=1 then will only do history rotating.
+
+_
+        }],
+        extra_cp_opts    => [array    => {
+            of           => 'str*',
+            summary      => 'Pass extra options to cp command',
+            description  => <<'_',
+
+Extra options to pass to cp command when doing backup. Note that the options
+will be shell quoted.
+
+_
+        }],
+        extra_rsync_opts => [array    => {
+            of           => 'str*',
+            summary      => 'Pass extra options to rsync command',
+            description  => <<'_',
+
+Extra options to pass to rsync command when doing backup. Note that the options
+will be shell quoted, , so you should pass it unquoted, e.g. ['--exclude',
+'/Program Files'].
+
+_
+        }],
+    },
+
+    cmdline_examples => [
+        {
+            cmd         => '/home/steven/mydata /backup/steven/mydata',
+            description => <<'_',
+
+Backup /home/steven/mydata to /backup/steven/mydata using the default number of
+histories ([-7, 4, 3]).
+
+_
+        },
+    ],
+};
 sub backup {
     my %args = @_;
 
@@ -33,7 +132,7 @@ sub backup {
     }
     my $target    = $args{target} or die "Please specify target\n";
     $target       =~ s!/+$!!;
-    my $histories = $args{histories} or die "Please specify histories\n";
+    my $histories = $args{histories} // [-7, 4, 3];
     ref($histories) eq 'ARRAY' or die "histories must be array\n";
     my $backup    = $args{backup} // 1;
     my $rotate    = $args{rotate} // 1;
@@ -67,6 +166,8 @@ sub backup {
     }
 
     unlock("$target/.lock");
+
+    [200, "OK"];
 }
 
 sub _backup {
@@ -204,11 +305,11 @@ sub _rotate {
 
 =head1 NAME
 
-File::CRBackup - Cp+rsync-based filesystem backup with history levels and hardlinks
+File::CRBackup - Backup files/directories with histories, using cp+rsync
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 SYNOPSIS
 
@@ -220,8 +321,12 @@ In daily-backup script:
  backup(
      source    => '/path/to/mydata',
      target    => '/backup/mydata',
-     histories => [7, 4, 3],         # 7 days, 4 weeks, 3 months
+     histories => [-7, 4, 3],         # 7 days, 4 weeks, 3 months
  );
+
+Or, just use the provided script:
+
+ % crbackup --source /path/to/mydata --target /backup/mydata
 
 =head1 DESCRIPTION
 
@@ -233,12 +338,12 @@ backup system:
 
 =item * Supports backup histories and history levels
 
-For example, you can create 7 level-1 backup histories (equals 7 days worth of
-history if you run backup once daily), 4 level-2 backup histories (roughly
-equals 4 weeks) and 3 level-3 backup histories (rougly equals 3 months). The
-number of levels and history per levels are customizable.
+For example, you can create 7 level-1 backup histories (equals 7 daily histories
+if you run backup once daily), 4 level-2 backup histories (equals 4 weekly
+histories) and 3 level-3 backup histories (roughly equals 3 monthly histories).
+The number of levels and history per levels are customizable.
 
-=item * Backups are not compressed/archived ("tar"-ed)
+=item * Backups (and histories) are not compressed/archived ("tar"-ed)
 
 They are just verbatim copies (produced by L<cp -a>, or L<rsync -a>) of source
 directory. The upside of this is ease of cherry-picking (taking/restoring
@@ -271,7 +376,8 @@ This module uses Log::Any logging framework.
 
 =head2 First-time backup
 
-First, we lock target directory to prevent other backup process to interfere:
+First, we lock target directory to prevent other backup process from
+interfering:
 
  mkdir -p TARGET
  flock    TARGET/.lock
@@ -318,6 +424,10 @@ If rsync finishes successfully, we rename target directories:
 If rsync fails in the middle, TARGET/.tmp will be lying around and the next
 backup process will just continue the rsync process.
 
+Finally, we remove lock:
+
+ unlock   TARGET/.lock
+
 =head2 Maintenance of histories/history levels
 
 TARGET/hist.* are level-1 backup histories. Each backup run will produce a new
@@ -363,66 +473,54 @@ TARGET/hist3.<timestamp85> comes along.
 
 None of the functions are exported by default.
 
-=head2 backup(%args)
+=head1 HISTORY
 
-Arguments (those marked with C<*> are required):
+The idea for this module came out in 2006 as part of the Spanel hosting control
+panel project. We need a daily backup system for shared hosting accounts that
+supports histories and cherry-picking. Previously we had been using a
+Python-based script B<rdiff-backup>. It was not very robust, the script chose to
+exit on many kinds of non-fatal errors instead of ignoring the errors and
+continuning backup. It was also very slow: on a server with hundreds of accounts
+with millions of files, backup process often took 12 hours or more. After
+evaluating several other solutions, we realized that nothing beats the raw
+performance of rsync/cp. Thus we designed a simple backup system based on them.
+
+First public release of this module is in Feb 2011.
+
+=head1 FAQ
+
+=head2 How do I exclude some directories?
+
+Just use rsync's --exclude et al. Pass them to extra_rsync_opts.
+
+=head2 What is a good backup practice (using CRBackup)?
+
+Just follow the general practice. While this is not a place to discuss backups
+in general, some of the principles are:
 
 =over 4
 
-=item * source* => PATH or [PATH, ...]
+=item * backup regularly (e.g. once daily or more often)
 
-=item * target* => PATH
+=item * automate the process (else you'll forget)
 
-=item * histories* => [NUM, ...]
+=item * backup to another disk partition and computer
 
-Specifies number of backup histories to keep for level 1, 2, and so on. If
-number is negative, specifies number of days to keep instead (regardless of
-number of histories).
+=item * verify your backups often (what good are they if they can't be restored)
 
-=item * extra_dir => BOOL
-
-If set to 1, then backup(source => '/a', target => '/backup/a') will create
-another 'a' directory, i.e. /backup/a/current/a. Otherwise, contents of a/ will
-be directly copied under /backup/a/current/.
-
-Will always be set to 1 if source is more than one, but default to 0 if source
-is a single directory. You can set this to 1 to so that behaviour when there is
-a single source is the same as behaviour when there are several sources.
-
-=item * backup => BOOL (default 1)
-
-Whether to do backup or not. If backup=1 and rotate=0 then will only create new
-backup without rotating histories.
-
-=item * rotate => BOOL (default 1)
-
-Whether to rotate histories or not (which is done after backup). If backup=0 and
-rotate=1 then will only do history rotating.
-
-=item * extra_cp_opts => ARRAYREF (default none)
-
-Extra options to pass to B<cp> command when doing backup. Note that the options
-will be shell quoted.
-
-=item * extra_rsync_opts => ARRAYREF (default none)
-
-Extra options to pass to B<rsync> command when doing backup. Note that the
-options will be shell quoted, so you should pass it unquoted, e.g. ['--exclude',
-'/Program Files'].
+=item * when appropriate, encrypt your backups
 
 =back
 
-=head1 HISTORY
+=head2 How do I restore backups?
 
-This module came out of the Spanel hosting control panel project. We needed a
-daily backup system for shared hosting accounts that supports histories and
-cherry-picking. At first we used B<rdiff-backup>, but turned out it was not very
-robust as the script chose to exit on many kinds of non-fatal errors instead of
-ignoring the errors and continuning backup. It was also very slow: on a server
-with hundreds of accounts with millions of files, backup process often took 12
-hours or more. After evaluating several other solutions, we realized that
-nothing beats the raw performance of rsync/cp. Thus we designed a simple backup
-system based on them.
+Backups are just verbatim copies of files/directories, so just use whatever
+filesystem tools you like.
+
+=head2 How to do remote backup?
+
+With CRBackup, rsync+ssh your resulting local backup to another host. I believe
+with L<Snapback2> you can directly SSH to remote hosts.
 
 =head1 TODO
 
@@ -433,6 +531,10 @@ system based on them.
 L<File::Backup>
 
 L<File::Rotate::Backup>
+
+L<Snapback2>, which is a backup system using the same principle as outlined
+above, created in as early as 2004 (or earlier) by Mike Heins. Do check it out.
+I wish I had found it first before reinventing it in 2006 :-)
 
 =head1 AUTHOR
 

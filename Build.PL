@@ -12,12 +12,12 @@ my %module_build_args = (
   'configure_requires' => {
     'Module::Build' => '0.3601'
   },
-  'dist_abstract' => 'Cp+rsync-based filesystem backup with history levels and hardlinks',
+  'dist_abstract' => 'Backup files/directories with histories, using cp+rsync',
   'dist_author' => [
     'Steven Haryanto <stevenharyanto@gmail.com>'
   ],
   'dist_name' => 'File-CRBackup',
-  'dist_version' => '0.02',
+  'dist_version' => '0.03',
   'license' => 'perl',
   'module_name' => 'File::CRBackup',
   'recommends' => {},
@@ -28,11 +28,15 @@ my %module_build_args = (
     'File::Slurp' => '0',
     'File::Which' => '0',
     'File::chdir' => '0',
+    'Log::Any' => '0',
     'String::ShellQuote' => '0',
+    'Sub::Spec::CmdLine' => '0',
     'Taint::Util' => '0',
     'perl' => '5.010000'
   },
-  'script_files' => []
+  'script_files' => [
+    'bin/crbackup'
+  ]
 );
 
 
