@@ -2,7 +2,7 @@ NAME
     File::CRBackup - Backup files/directories with histories, using cp+rsync
 
 VERSION
-    version 0.04
+    version 0.05
 
 SYNOPSIS
     In daily-backup script:
@@ -210,9 +210,10 @@ SEE ALSO
 
     File::Rotate::Backup
 
-    Snapback2, which is a backup system using the same principle as outlined
-    above, created in as early as 2004 (or earlier) by Mike Heins. Do check
-    it out. I wish I had found it first before reinventing it in 2006 :-)
+    Snapback2, which is a backup system using the same basic principle (cp
+    -la + rsync snapshots), created in as early as 2004 (or earlier) by Mike
+    Heins. Do check it out. I wish I had found it first before reinventing
+    it in 2006 :-)
 
 AUTHOR
     Steven Haryanto <stevenharyanto@gmail.com>

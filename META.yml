@@ -20,6 +20,7 @@ requires:
   File::Which: 0
   File::chdir: 0
   Log::Any: 0
+  Log::Any::App: 0
   String::ShellQuote: 0
   Sub::Spec::CmdLine: 0.02
   Taint::Util: 0
@@ -27,4 +28,4 @@ requires:
 resources:
   homepage: http://search.cpan.org/dist/File-CRBackup/
   repository: http://github.com/sharyanto/perl-File-CRBackup
-version: 0.04
+version: 0.05

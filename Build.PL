@@ -17,7 +17,7 @@ my %module_build_args = (
     'Steven Haryanto <stevenharyanto@gmail.com>'
   ],
   'dist_name' => 'File-CRBackup',
-  'dist_version' => '0.04',
+  'dist_version' => '0.05',
   'license' => 'perl',
   'module_name' => 'File::CRBackup',
   'recommends' => {},
@@ -29,6 +29,7 @@ my %module_build_args = (
     'File::Which' => '0',
     'File::chdir' => '0',
     'Log::Any' => '0',
+    'Log::Any::App' => '0',
     'String::ShellQuote' => '0',
     'Sub::Spec::CmdLine' => '0.02',
     'Taint::Util' => '0',
