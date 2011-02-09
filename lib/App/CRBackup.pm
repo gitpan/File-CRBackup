@@ -1,8 +1,9 @@
 package App::CRBackup;
 BEGIN {
-  $App::CRBackup::VERSION = '0.03';
+  $App::CRBackup::VERSION = '0.04';
 }
 use parent qw(File::CRBackup);
+1;
 
 __END__
 =pod
@@ -13,7 +14,7 @@ App::CRBackup
 
 =head1 VERSION
 
-version 0.03
+version 0.04
 
 =head1 AUTHOR
 

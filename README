@@ -2,7 +2,7 @@ NAME
     File::CRBackup - Backup files/directories with histories, using cp+rsync
 
 VERSION
-    version 0.03
+    version 0.04
 
 SYNOPSIS
     In daily-backup script:

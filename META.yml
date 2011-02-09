@@ -21,10 +21,10 @@ requires:
   File::chdir: 0
   Log::Any: 0
   String::ShellQuote: 0
-  Sub::Spec::CmdLine: 0
+  Sub::Spec::CmdLine: 0.02
   Taint::Util: 0
   perl: 5.010000
 resources:
   homepage: http://search.cpan.org/dist/File-CRBackup/
   repository: http://github.com/sharyanto/perl-File-CRBackup
-version: 0.03
+version: 0.04

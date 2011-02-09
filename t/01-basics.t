@@ -10,8 +10,6 @@ use Test::More;
 $ENV{PATH} = "/usr/local/bin:/usr/bin:/bin";
 if (!which("cp") || !which("rsync")) {
     plan skip_all => "Can't find cp / rsync";
-} else {
-    plan tests => 9;
 }
 
 use File::chdir;
@@ -23,7 +21,6 @@ use String::ShellQuote;
 
 my $tmpdir = tempdir(CLEANUP => 1);
 $CWD = $tmpdir;
-diag("tmpdir = $tmpdir");
 
 test_backup(
     n_sources => 1,
@@ -48,8 +45,12 @@ test_backup(
 
 # XXX test rsync_cp_opts
 
-# XXX don't delete if any tests of the above fails
-$CWD = "/";
+# don't delete if any tests of the above fails
+if (done_testing()) {
+    $CWD = "/";
+} else {
+    diag("tmpdir = $tmpdir");
+}
 
 sub test_backup {
     my %args = @_;

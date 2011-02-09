@@ -1,6 +1,6 @@
 package File::CRBackup;
 BEGIN {
-  $File::CRBackup::VERSION = '0.03';
+  $File::CRBackup::VERSION = '0.04';
 }
 # ABSTRACT: Backup files/directories with histories, using cp+rsync
 
@@ -32,11 +32,11 @@ $SUBS{backup} = {
         source           => ['any*'   => {
             of           => ['str*', ['array*' => {of=>'str*'}]],
             summary      => 'Director(y|ies) to backup',
-            arg_order    => 0,
+            arg_pos      => 0,
         }],
         target           => ['str*'   => {
             summary      => 'Backup destination',
-            arg_order    => 1,
+            arg_pos      => 1,
         }],
         histories        => ['array*' => {
             of           => 'int*',
@@ -309,7 +309,7 @@ File::CRBackup - Backup files/directories with histories, using cp+rsync
 
 =head1 VERSION
 
-version 0.03
+version 0.04
 
 =head1 SYNOPSIS
 
