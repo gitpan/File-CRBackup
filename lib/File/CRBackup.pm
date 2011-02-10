@@ -1,6 +1,6 @@
 package File::CRBackup;
 BEGIN {
-  $File::CRBackup::VERSION = '0.05';
+  $File::CRBackup::VERSION = '0.06';
 }
 # ABSTRACT: Backup files/directories with histories, using cp+rsync
 
@@ -309,7 +309,7 @@ File::CRBackup - Backup files/directories with histories, using cp+rsync
 
 =head1 VERSION
 
-version 0.05
+version 0.06
 
 =head1 SYNOPSIS
 
@@ -472,6 +472,63 @@ TARGET/hist3.<timestamp85> comes along.
 =head1 FUNCTIONS
 
 None of the functions are exported by default.
+
+=head2 backup(%args) -> RES
+
+
+Backup files/directories with histories, using cp+rsync.
+
+Arguments: (* denotes required arguments):
+
+=over 4
+
+=item * source* => ARRAY|STRDirector(y|ies) to backup.
+
+=item * target* => STRBackup destination.
+
+=item * backup => BOOL (default 1)
+
+Whether to do backup or not.
+
+If backup=1 and rotate=0 then will only create new backup without rotating
+histories.
+
+=item * extra_cp_opts => ARRAYPass extra options to cp command.
+
+Extra options to pass to cp command when doing backup. Note that the options
+will be shell quoted.
+
+=item * extra_dir => BOOLWhether to force creation of source directory in target.
+
+If set to 1, then backup(source => '/a', target => '/backup/a') will create
+another 'a' directory in target, i.e. /backup/a/current/a. Otherwise, contents
+of a/ will be directly copied under /backup/a/current/.
+
+Will always be set to 1 if source is more than one, but default to 0 if source
+is a single directory. You can set this to 1 to so that behaviour when there is
+a single source is the same as behaviour when there are several sources.
+
+=item * extra_rsync_opts => ARRAYPass extra options to rsync command.
+
+Extra options to pass to rsync command when doing backup. Note that the options
+will be shell quoted, , so you should pass it unquoted, e.g. ['--exclude',
+'/Program Files'].
+
+=item * histories* => ARRAY (default [-7, 4, 3])
+
+Histories/history levels.
+
+Specifies number of backup histories to keep for level 1, 2, and so on. If
+number is negative, specifies number of days to keep instead (regardless of
+number of histories).
+
+=item * rotate => BOOL (default 1)
+
+Whether to do rotate after backup or not.
+
+If backup=0 and rotate=1 then will only do history rotating.
+
+=back
 
 =head1 HISTORY
 
