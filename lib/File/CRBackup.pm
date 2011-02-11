@@ -1,6 +1,6 @@
 package File::CRBackup;
 BEGIN {
-  $File::CRBackup::VERSION = '0.06';
+  $File::CRBackup::VERSION = '0.07';
 }
 # ABSTRACT: Backup files/directories with histories, using cp+rsync
 
@@ -27,7 +27,6 @@ our %SUBS;
 $SUBS{backup} = {
     summary       =>
         'Backup files/directories with histories, using cp+rsync',
-    required_args => [qw/source target/],
     args          => {
         source           => ['any*'   => {
             of           => ['str*', ['array*' => {of=>'str*'}]],
@@ -309,7 +308,7 @@ File::CRBackup - Backup files/directories with histories, using cp+rsync
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 SYNOPSIS
 
@@ -471,34 +470,42 @@ TARGET/hist3.<timestamp85> comes along.
 
 =head1 FUNCTIONS
 
-None of the functions are exported by default.
+None of the functions are exported by default, but they are exportable.
 
-=head2 backup(%args) -> RES
+=head2 backup(%args) -> RESP
 
 
 Backup files/directories with histories, using cp+rsync.
 
-Arguments: (* denotes required arguments):
+Arguments (C<*> denotes required arguments):
 
 =over 4
 
-=item * source* => ARRAY|STRDirector(y|ies) to backup.
+=item * B<source>* => I<array|str>
 
-=item * target* => STRBackup destination.
+Director(y|ies) to backup.
 
-=item * backup => BOOL (default 1)
+=item * B<target>* => I<str>
+
+Backup destination.
+
+=item * B<backup> => I<bool> (default C<1>)
 
 Whether to do backup or not.
 
 If backup=1 and rotate=0 then will only create new backup without rotating
 histories.
 
-=item * extra_cp_opts => ARRAYPass extra options to cp command.
+=item * B<extra_cp_opts> => I<array>
+
+Pass extra options to cp command.
 
 Extra options to pass to cp command when doing backup. Note that the options
 will be shell quoted.
 
-=item * extra_dir => BOOLWhether to force creation of source directory in target.
+=item * B<extra_dir> => I<bool>
+
+Whether to force creation of source directory in target.
 
 If set to 1, then backup(source => '/a', target => '/backup/a') will create
 another 'a' directory in target, i.e. /backup/a/current/a. Otherwise, contents
@@ -508,13 +515,15 @@ Will always be set to 1 if source is more than one, but default to 0 if source
 is a single directory. You can set this to 1 to so that behaviour when there is
 a single source is the same as behaviour when there are several sources.
 
-=item * extra_rsync_opts => ARRAYPass extra options to rsync command.
+=item * B<extra_rsync_opts> => I<array>
+
+Pass extra options to rsync command.
 
 Extra options to pass to rsync command when doing backup. Note that the options
 will be shell quoted, , so you should pass it unquoted, e.g. ['--exclude',
 '/Program Files'].
 
-=item * histories* => ARRAY (default [-7, 4, 3])
+=item * B<histories>* => I<array> (default C<[-7, 4, 3]>)
 
 Histories/history levels.
 
@@ -522,7 +531,7 @@ Specifies number of backup histories to keep for level 1, 2, and so on. If
 number is negative, specifies number of days to keep instead (regardless of
 number of histories).
 
-=item * rotate => BOOL (default 1)
+=item * B<rotate> => I<bool> (default C<1>)
 
 Whether to do rotate after backup or not.
 

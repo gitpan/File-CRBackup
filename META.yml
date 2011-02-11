@@ -28,4 +28,4 @@ requires:
 resources:
   homepage: http://search.cpan.org/dist/File-CRBackup/
   repository: http://github.com/sharyanto/perl-File-CRBackup
-version: 0.06
+version: 0.07

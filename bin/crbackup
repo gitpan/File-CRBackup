@@ -3,7 +3,7 @@
 # workaround for dzil
 package crbackup;
 BEGIN {
-  $crbackup::VERSION = '0.06';
+  $crbackup::VERSION = '0.07';
 }
 # ABSTRACT: Backup files/directories with histories, using cp+rsync
 
@@ -27,7 +27,7 @@ crbackup - Backup files/directories with histories, using cp+rsync
 
 =head1 VERSION
 
-version 0.06
+version 0.07
 
 =head1 DESCRIPTION
 

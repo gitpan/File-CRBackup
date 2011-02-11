@@ -2,7 +2,7 @@ NAME
     File::CRBackup - Backup files/directories with histories, using cp+rsync
 
 VERSION
-    version 0.06
+    version 0.07
 
 SYNOPSIS
     In daily-backup script:
@@ -159,31 +159,38 @@ HOW IT WORKS
     TARGET/hist3.<timestamp85> comes along.
 
 FUNCTIONS
-    None of the functions are exported by default.
+    None of the functions are exported by default, but they are exportable.
 
-  backup(%args) -> RES
+  backup(%args) -> RESP
     Backup files/directories with histories, using cp+rsync.
 
-    Arguments: (* denotes required arguments):
+    Arguments ("*" denotes required arguments):
 
-    *   source* => ARRAY|STRDirector(y|ies) to backup.
+    *   source* => *array|str*
 
-    *   target* => STRBackup destination.
+        Director(y|ies) to backup.
 
-    *   backup => BOOL (default 1)
+    *   target* => *str*
+
+        Backup destination.
+
+    *   backup => *bool* (default 1)
 
         Whether to do backup or not.
 
         If backup=1 and rotate=0 then will only create new backup without
         rotating histories.
 
-    *   extra_cp_opts => ARRAYPass extra options to cp command.
+    *   extra_cp_opts => *array*
+
+        Pass extra options to cp command.
 
         Extra options to pass to cp command when doing backup. Note that the
         options will be shell quoted.
 
-    *   extra_dir => BOOLWhether to force creation of source directory in
-        target.
+    *   extra_dir => *bool*
+
+        Whether to force creation of source directory in target.
 
         If set to 1, then backup(source => '/a', target => '/backup/a') will
         create another 'a' directory in target, i.e. /backup/a/current/a.
@@ -195,13 +202,15 @@ FUNCTIONS
         behaviour when there is a single source is the same as behaviour
         when there are several sources.
 
-    *   extra_rsync_opts => ARRAYPass extra options to rsync command.
+    *   extra_rsync_opts => *array*
+
+        Pass extra options to rsync command.
 
         Extra options to pass to rsync command when doing backup. Note that
         the options will be shell quoted, , so you should pass it unquoted,
         e.g. ['--exclude', '/Program Files'].
 
-    *   histories* => ARRAY (default [-7, 4, 3])
+    *   histories* => *array* (default "[-7, 4, 3]")
 
         Histories/history levels.
 
@@ -209,7 +218,7 @@ FUNCTIONS
         on. If number is negative, specifies number of days to keep instead
         (regardless of number of histories).
 
-    *   rotate => BOOL (default 1)
+    *   rotate => *bool* (default 1)
 
         Whether to do rotate after backup or not.
 
